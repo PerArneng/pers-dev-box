@@ -4,20 +4,23 @@ from pathlib import Path
 from devbox.state_changer import StateChanger
 from devbox.target import Target
 from devbox.target_lock import TargetLock
+from devbox.utils.devbox_log import DevBoxLog
 
 
 class CreateOrReplaceFile(StateChanger):
     """State changer that creates or replaces a file with placeholder content."""
 
-    def __init__(self, path: Path, contents: str) -> None:
+    def __init__(self, path: Path, contents: str, log: DevBoxLog) -> None:
         """Initialize the CreateOrReplaceFile state changer.
 
         Args:
             path: The path to the file to create or replace.
             contents: The contents to write to the file.
+            log: The logger instance for logging operations.
         """
         self.path = path
         self.contents = contents
+        self.log = log
 
     def get_name(self) -> str:
         """Return the name of this state changer.
@@ -52,10 +55,12 @@ class CreateOrReplaceFile(StateChanger):
 
     def change(self) -> None:
         """Apply the state change by creating or replacing the file."""
+        self.log.info(f"Creating/replacing file: {self.path}")
         self.path.write_text(self.contents)
 
     def undo(self) -> None:
         """Undo the state change."""
+        self.log.info(f"Undo not implemented for: {self.path}")
         pass
 
     def is_changed(self) -> bool:
