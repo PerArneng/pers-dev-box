@@ -89,11 +89,11 @@ class StateChanger(ABC):
         pass
 
     @abstractmethod
-    def undo(self) -> ChangeResult:
-        """Undo the state change.
+    def rollback(self) -> ChangeResult:
+        """Rollback the state change.
 
         Returns:
-            ChangeResult: The result of the undo operation.
+            ChangeResult: The result of the rollback operation.
         """
         pass
 

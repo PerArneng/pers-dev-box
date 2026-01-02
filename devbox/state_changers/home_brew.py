@@ -88,11 +88,11 @@ class HomeBrew(StateChanger):
             f"Successfully installed Homebrew package: {self.package_name}",
         )
 
-    def undo(self) -> ChangeResult:
-        """Undo the state change by uninstalling the Homebrew package.
+    def rollback(self) -> ChangeResult:
+        """Rollback the state change by uninstalling the Homebrew package.
 
         Returns:
-            ChangeResult: The result of the undo operation.
+            ChangeResult: The result of the rollback operation.
         """
         self.log.info_from(self, f"Starting Homebrew package uninstallation")
         self.log.info_from(self, f"Package name: {self.package_name}")

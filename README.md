@@ -21,7 +21,7 @@ Abstract base class for implementing state change operations:
 - `get_name()`: Returns the name of the state changer
 - `get_locks()`: Returns list of target locks
 - `change()`: Applies the state change, returns `ChangeResult`
-- `undo()`: Reverts the state change, returns `ChangeResult`
+- `rollback()`: Reverts the state change, returns `ChangeResult`
 - `is_changed()`: Checks if the state has been changed
 
 ### ChangeEngine

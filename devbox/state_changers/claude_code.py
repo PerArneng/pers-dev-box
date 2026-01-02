@@ -42,14 +42,14 @@ class ClaudeCode(StateChanger):
         self.log.info_from(self, "Installing Claude Code")
         return self._homebrew.change()
 
-    def undo(self) -> ChangeResult:
-        """Undo the state change by uninstalling Claude Code.
+    def rollback(self) -> ChangeResult:
+        """Rollback the state change by uninstalling Claude Code.
 
         Returns:
-            ChangeResult: The result of the undo operation.
+            ChangeResult: The result of the rollback operation.
         """
         self.log.info_from(self, "Uninstalling Claude Code")
-        return self._homebrew.undo()
+        return self._homebrew.rollback()
 
     def is_changed(self) -> bool:
         """Check if Claude Code is already installed.

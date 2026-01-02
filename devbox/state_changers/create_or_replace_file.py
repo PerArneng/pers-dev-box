@@ -32,6 +32,15 @@ class CreateOrReplaceFile(StateChanger):
         self.log = log
         self.parent = parent
 
+    @property
+    def backup_path(self) -> Path:
+        """Return the backup file path.
+
+        Returns:
+            Path: The path with .devbox_backup extension appended.
+        """
+        return Path(str(self.path) + ".devbox_backup")
+
     def get_locks(self) -> list[TargetLock]:
         """Return the target locks for this state changer.
 
@@ -68,7 +77,9 @@ class CreateOrReplaceFile(StateChanger):
         try:
             file_exists = self.path.exists()
             if file_exists:
-                self.log.info_from(self, f"File exists, will be replaced")
+                self.log.info_from(self, f"File exists, creating backup before replacing")
+                self.backup_path.write_text(self.path.read_text())
+                self.log.info_from(self, f"Backup created at: {self.backup_path}")
             else:
                 self.log.info_from(self, f"File does not exist, will be created")
 
@@ -93,18 +104,40 @@ class CreateOrReplaceFile(StateChanger):
                 f"Failed to create/replace file {self.path}: {e}",
             )
 
-    def undo(self) -> ChangeResult:
-        """Undo the state change.
+    def rollback(self) -> ChangeResult:
+        """Rollback the state change by restoring from backup.
 
         Returns:
-            ChangeResult: The result of the undo operation.
+            ChangeResult: The result of the rollback operation.
         """
-        self.log.warn_from(self, f"Undo requested for: {self.path}")
-        self.log.warn_from(self, f"Undo operation is not implemented")
-        return ChangeResult(
-            ChangeStatus.WARN,
-            f"Undo not implemented for: {self.path}",
-        )
+        self.log.info_from(self, f"Rollback requested for: {self.path}")
+
+        if not self.backup_path.exists():
+            self.log.warn_from(self, f"No backup file found at: {self.backup_path}")
+            return ChangeResult(
+                ChangeStatus.WARN,
+                f"No backup to restore for: {self.path}",
+            )
+
+        try:
+            self.log.info_from(self, f"Restoring from backup: {self.backup_path}")
+            self.path.write_text(self.backup_path.read_text())
+            self.log.info_from(self, f"File restored successfully")
+
+            self.log.info_from(self, f"Removing backup file: {self.backup_path}")
+            self.backup_path.unlink()
+            self.log.info_from(self, f"Backup file removed")
+
+            return ChangeResult(
+                ChangeStatus.SUCCESS,
+                f"Restored file from backup: {self.path}",
+            )
+        except Exception as e:
+            self.log.error_from(self, f"Failed to restore from backup: {e}")
+            return ChangeResult(
+                ChangeStatus.FAILED,
+                f"Failed to restore {self.path} from backup: {e}",
+            )
 
     def is_changed(self) -> bool:
         """Check if the file exists and contains the expected contents.

@@ -63,7 +63,7 @@ devbox/
 2. Implement the `StateChanger` ABC:
    - `get_locks()` - Return list of TargetLock
    - `change()` - Apply change, return `ChangeResult`
-   - `undo()` - Revert change, return `ChangeResult`
+   - `rollback()` - Revert change, return `ChangeResult`
    - `is_changed()` - Check if already applied
 3. Accept `log: DevBoxLog` and optional `parent: StateChanger | None = None` as constructor parameters
 4. Set `self.parent = parent` in constructor
@@ -104,7 +104,7 @@ Do NOT override `__repr__` or `get_name()` in implementations.
 
 ### ChangeResult
 
-The `change()` and `undo()` methods return a `ChangeResult`:
+The `change()` and `rollback()` methods return a `ChangeResult`:
 
 ```python
 from devbox.change_result import ChangeResult
