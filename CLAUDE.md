@@ -14,7 +14,7 @@ The project uses `dependency-injector` for DI. All dependencies are wired throug
 - **Factory providers**:
   - `create_or_replace_file_factory` (accepts `path`, `contents`, optional `parent`)
   - `homebrew_factory` (accepts `package_name`, optional `parent`)
-  - `claude_code_factory` (accepts optional `parent`)
+  - `main_changes` - Returns dict of main StateChangers keyed by snake_case name
 
 Classes depend on ABC interfaces, not implementations:
 - `DevBoxLog` ABC for logging
@@ -34,6 +34,7 @@ Classes depend on ABC interfaces, not implementations:
 | `CreateOrReplaceFile` | StateChanger impl | `devbox/state_changers/create_or_replace_file.py` |
 | `HomeBrew` | StateChanger impl | `devbox/state_changers/home_brew.py` |
 | `ClaudeCode` | StateChanger impl | `devbox/state_changers/claude_code.py` |
+| `K9s` | StateChanger impl | `devbox/state_changers/k9s.py` |
 
 ### Module Structure
 
@@ -50,7 +51,8 @@ devbox/
 ├── state_changers/      # StateChanger implementations
 │   ├── claude_code.py
 │   ├── create_or_replace_file.py
-│   └── home_brew.py
+│   ├── home_brew.py
+│   └── k9s.py
 └── utils/
     └── devbox_log.py    # DevBoxLog ABC + DevBoxLogImpl
 ```
@@ -62,13 +64,15 @@ devbox/
 1. Create a new file in `devbox/state_changers/`
 2. Implement the `StateChanger` ABC:
    - `get_locks()` - Return list of TargetLock
-   - `change()` - Apply change, return `ChangeResult`
-   - `rollback()` - Revert change, return `ChangeResult`
+   - `change(verbose: bool = False)` - Apply change, return `ChangeResult`
+   - `rollback(verbose: bool = False)` - Revert change, return `ChangeResult`
    - `is_changed()` - Check if already applied
+   - `description()` - Return human-readable description
 3. Accept `log: DevBoxLog` and optional `parent: StateChanger | None = None` as constructor parameters
 4. Set `self.parent = parent` in constructor
 5. Add a factory provider in `devbox/container.py`
 6. Export from `devbox/state_changers/__init__.py`
+7. For main changers (available via CLI): Add to `_create_main_changes()` in `container.py`
 
 ### Parent Hierarchy
 
@@ -156,20 +160,40 @@ mock_log = Mock()
 container.log.override(providers.Object(mock_log))
 ```
 
-## Commands
+## CLI Commands
 
 ```bash
-# Run the application
-uv run python main.py
+# List all available state changers
+uv run python main.py list
+
+# Apply specific changes (comma-separated)
+uv run python main.py apply claude_code
+uv run python main.py apply claude_code,k9s
+
+# Apply with verbose output (full stdout/stderr from commands)
+uv run python main.py apply claude_code --verbose
+uv run python main.py apply k9s -v
+
+# Rollback specific changes
+uv run python main.py rollback k9s
+uv run python main.py rollback claude_code,k9s --verbose
 
 # Add dependencies
 uv add <package>
 ```
 
+### Available Changers
+
+| Name | Description |
+|------|-------------|
+| `claude_code` | Installs Claude Code CLI via Homebrew |
+| `k9s` | Installs K9s Kubernetes CLI via Homebrew |
+
 ## Entry Point
 
-`main.py` bootstraps the application:
-1. Creates `Container` instance
-2. Gets logger and engine from container
-3. Creates state changers via factory (log auto-injected)
-4. Calls `engine.apply_changes()`
+`main.py` provides a CLI with subcommands:
+- `list` - Shows all available changers from `container.main_changes()`
+- `apply <names>` - Applies specified changers via `ChangeEngine`
+- `rollback <names>` - Rolls back specified changers
+
+The `--verbose` / `-v` flag on apply/rollback enables full command output logging.
