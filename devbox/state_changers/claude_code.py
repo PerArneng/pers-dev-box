@@ -58,3 +58,11 @@ class ClaudeCode(StateChanger):
             bool: True if Claude Code is installed, False otherwise.
         """
         return self._homebrew.is_changed()
+
+    def description(self) -> str:
+        """Return a human-readable description of what this state changer does.
+
+        Returns:
+            str: A description of the state change operation.
+        """
+        return "Installs Claude Code CLI via Homebrew"

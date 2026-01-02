@@ -105,3 +105,12 @@ class StateChanger(ABC):
             bool: True if the state has been changed, False otherwise.
         """
         pass
+
+    @abstractmethod
+    def description(self) -> str:
+        """Return a human-readable description of what this state changer does.
+
+        Returns:
+            str: A description of the state change operation.
+        """
+        pass

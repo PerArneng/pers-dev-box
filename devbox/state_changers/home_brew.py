@@ -142,3 +142,11 @@ class HomeBrew(StateChanger):
             self.log.info_from(self, f"Package is not installed: {self.package_name}")
 
         return is_installed
+
+    def description(self) -> str:
+        """Return a human-readable description of what this state changer does.
+
+        Returns:
+            str: A description of the state change operation.
+        """
+        return f"Installs the '{self.package_name}' package via Homebrew"

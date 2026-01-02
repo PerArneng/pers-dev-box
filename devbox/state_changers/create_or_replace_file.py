@@ -154,3 +154,11 @@ class CreateOrReplaceFile(StateChanger):
         else:
             self.log.info_from(self, f"File exists but content differs: {self.path}")
         return matches
+
+    def description(self) -> str:
+        """Return a human-readable description of what this state changer does.
+
+        Returns:
+            str: A description of the state change operation.
+        """
+        return f"Creates or replaces the file at '{self.path}'"
