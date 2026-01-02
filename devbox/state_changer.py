@@ -80,8 +80,11 @@ class StateChanger(ABC):
         pass
 
     @abstractmethod
-    def change(self) -> ChangeResult:
+    def change(self, verbose: bool = False) -> ChangeResult:
         """Apply the state change.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the change operation.
@@ -89,8 +92,11 @@ class StateChanger(ABC):
         pass
 
     @abstractmethod
-    def rollback(self) -> ChangeResult:
+    def rollback(self, verbose: bool = False) -> ChangeResult:
         """Rollback the state change.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the rollback operation.

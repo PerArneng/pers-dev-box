@@ -5,17 +5,17 @@ from devbox.target_lock import TargetLock
 from devbox.utils.devbox_log import DevBoxLog
 
 
-class ClaudeCode(StateChanger):
-    """State changer that installs Claude Code via Homebrew."""
+class K9s(StateChanger):
+    """State changer that installs K9s via Homebrew."""
 
-    PACKAGE_NAME = "claude-code"
+    PACKAGE_NAME = "k9s"
 
     def __init__(
         self,
         log: DevBoxLog,
         parent: StateChanger | None = None,
     ) -> None:
-        """Initialize the ClaudeCode state changer.
+        """Initialize the K9s state changer.
 
         Args:
             log: The logger instance for logging operations.
@@ -34,7 +34,7 @@ class ClaudeCode(StateChanger):
         return self._homebrew.get_locks()
 
     def change(self, verbose: bool = False) -> ChangeResult:
-        """Apply the state change by installing Claude Code via Homebrew.
+        """Apply the state change by installing K9S via Homebrew.
 
         Args:
             verbose: If True, log full command output (stdout/stderr).
@@ -42,11 +42,11 @@ class ClaudeCode(StateChanger):
         Returns:
             ChangeResult: The result of the change operation.
         """
-        self.log.info_from(self, "Installing Claude Code")
+        self.log.info_from(self, "Installing K9S")
         return self._homebrew.change(verbose)
 
     def rollback(self, verbose: bool = False) -> ChangeResult:
-        """Rollback the state change by uninstalling Claude Code.
+        """Rollback the state change by uninstalling K9S.
 
         Args:
             verbose: If True, log full command output (stdout/stderr).
@@ -54,14 +54,14 @@ class ClaudeCode(StateChanger):
         Returns:
             ChangeResult: The result of the rollback operation.
         """
-        self.log.info_from(self, "Uninstalling Claude Code")
+        self.log.info_from(self, "Uninstalling K9S")
         return self._homebrew.rollback(verbose)
 
     def is_changed(self) -> bool:
-        """Check if Claude Code is already installed.
+        """Check if K9S is already installed.
 
         Returns:
-            bool: True if Claude Code is installed, False otherwise.
+            bool: True if K9S is installed, False otherwise.
         """
         return self._homebrew.is_changed()
 
@@ -71,4 +71,4 @@ class ClaudeCode(StateChanger):
         Returns:
             str: A description of the state change operation.
         """
-        return "Installs Claude Code CLI via Homebrew"
+        return "Installs K9S Kubernetes CLI via Homebrew"

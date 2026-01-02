@@ -29,8 +29,12 @@ class ChangeEngine:
         self.log.info_from(self, f"Total state changers: {len(self.state_changers) + 1}")
         self.state_changers.append(state_changer)
 
-    def apply_changes(self) -> None:
-        """Run through all state changers and execute their change methods."""
+    def apply_changes(self, verbose: bool = False) -> None:
+        """Run through all state changers and execute their change methods.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
+        """
         self.log.info_from(self, f"Starting to apply changes")
         self.log.info_from(self, f"Total state changers to process: {len(self.state_changers)}")
 
@@ -43,7 +47,7 @@ class ChangeEngine:
 
             if not state_changer.is_changed():
                 self.log.info_from(self, f"Executing change for: {state_changer}")
-                result = state_changer.change()
+                result = state_changer.change(verbose)
                 self._log_result(state_changer, result)
 
                 if result.status == ChangeStatus.SUCCESS:

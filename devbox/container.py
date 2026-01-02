@@ -4,7 +4,14 @@ from devbox.change_engine import ChangeEngine
 from devbox.state_changers.claude_code import ClaudeCode
 from devbox.state_changers.create_or_replace_file import CreateOrReplaceFile
 from devbox.state_changers.home_brew import HomeBrew
+from devbox.state_changers.k9s import K9s
 from devbox.utils.devbox_log import DevBoxLog, DevBoxLogImpl
+
+
+def _create_main_changes(log: DevBoxLog) -> dict:
+    """Create a dict of main StateChangers keyed by snake_case name."""
+    changers = [ClaudeCode(log), K9s(log)]
+    return {changer.get_name(): changer for changer in changers}
 
 
 class Container(containers.DeclarativeContainer):
@@ -25,9 +32,9 @@ class Container(containers.DeclarativeContainer):
         log=log,
     )
 
-    # ClaudeCode Factory - installs claude-code via Homebrew
-    claude_code_factory = providers.Factory(
-        ClaudeCode,
+    # Main changes - dict of main StateChangers keyed by snake_case name
+    main_changes = providers.Factory(
+        _create_main_changes,
         log=log,
     )
 

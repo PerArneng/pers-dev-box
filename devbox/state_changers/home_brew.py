@@ -51,8 +51,11 @@ class HomeBrew(StateChanger):
 
         return [target_lock]
 
-    def change(self) -> ChangeResult:
+    def change(self, verbose: bool = False) -> ChangeResult:
         """Apply the state change by installing the Homebrew package.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the change operation.
@@ -80,16 +83,22 @@ class HomeBrew(StateChanger):
             )
 
         self.log.info_from(self, f"Installation completed successfully")
-        if result.stdout.strip():
-            self.log.info_from(self, f"Output: {result.stdout.strip()[:200]}...")
+        if verbose:
+            if result.stdout.strip():
+                self.log.info_from(self, f"stdout:\n{result.stdout}")
+            if result.stderr.strip():
+                self.log.info_from(self, f"stderr:\n{result.stderr}")
 
         return ChangeResult(
             ChangeStatus.SUCCESS,
             f"Successfully installed Homebrew package: {self.package_name}",
         )
 
-    def rollback(self) -> ChangeResult:
+    def rollback(self, verbose: bool = False) -> ChangeResult:
         """Rollback the state change by uninstalling the Homebrew package.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the rollback operation.
@@ -115,6 +124,12 @@ class HomeBrew(StateChanger):
             )
 
         self.log.info_from(self, f"Uninstallation completed successfully")
+        if verbose:
+            if result.stdout.strip():
+                self.log.info_from(self, f"stdout:\n{result.stdout}")
+            if result.stderr.strip():
+                self.log.info_from(self, f"stderr:\n{result.stderr}")
+
         return ChangeResult(
             ChangeStatus.SUCCESS,
             f"Successfully uninstalled Homebrew package: {self.package_name}",

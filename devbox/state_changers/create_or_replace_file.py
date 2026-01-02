@@ -64,8 +64,11 @@ class CreateOrReplaceFile(StateChanger):
 
         return [target_lock]
 
-    def change(self) -> ChangeResult:
+    def change(self, verbose: bool = False) -> ChangeResult:
         """Apply the state change by creating or replacing the file.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the change operation.
@@ -104,8 +107,11 @@ class CreateOrReplaceFile(StateChanger):
                 f"Failed to create/replace file {self.path}: {e}",
             )
 
-    def rollback(self) -> ChangeResult:
+    def rollback(self, verbose: bool = False) -> ChangeResult:
         """Rollback the state change by restoring from backup.
+
+        Args:
+            verbose: If True, log full command output (stdout/stderr).
 
         Returns:
             ChangeResult: The result of the rollback operation.
