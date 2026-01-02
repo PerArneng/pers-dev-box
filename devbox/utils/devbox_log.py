@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Any
 
 
 class DevBoxLog(ABC):
@@ -16,6 +17,16 @@ class DevBoxLog(ABC):
         pass
 
     @abstractmethod
+    def info_from(self, source: Any, message: str) -> None:
+        """Log an info message with source.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+        """
+        pass
+
+    @abstractmethod
     def warn(self, message: str) -> None:
         """Log a warning message.
 
@@ -25,10 +36,30 @@ class DevBoxLog(ABC):
         pass
 
     @abstractmethod
+    def warn_from(self, source: Any, message: str) -> None:
+        """Log a warning message with source.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+        """
+        pass
+
+    @abstractmethod
     def error(self, message: str) -> None:
         """Log an error message.
 
         Args:
+            message: The message to log.
+        """
+        pass
+
+    @abstractmethod
+    def error_from(self, source: Any, message: str) -> None:
+        """Log an error message with source.
+
+        Args:
+            source: The source object where the log originates.
             message: The message to log.
         """
         pass
@@ -72,6 +103,18 @@ class DevBoxLogImpl(DevBoxLog):
         formatted_message = f"{timestamp} {colored_level} {message}"
         print(formatted_message)
 
+    def _format_with_source(self, source: Any, message: str) -> str:
+        """Format a message with source prefix.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+
+        Returns:
+            str: The formatted message with source prefix.
+        """
+        return f"[{source}]: {message}"
+
     def info(self, message: str) -> None:
         """Log an info message.
 
@@ -79,6 +122,15 @@ class DevBoxLogImpl(DevBoxLog):
             message: The message to log.
         """
         self._log("INFO", message, self.INFO_COLOR)
+
+    def info_from(self, source: Any, message: str) -> None:
+        """Log an info message with source.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+        """
+        self.info(self._format_with_source(source, message))
 
     def warn(self, message: str) -> None:
         """Log a warning message.
@@ -88,6 +140,15 @@ class DevBoxLogImpl(DevBoxLog):
         """
         self._log("WARN", message, self.WARN_COLOR)
 
+    def warn_from(self, source: Any, message: str) -> None:
+        """Log a warning message with source.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+        """
+        self.warn(self._format_with_source(source, message))
+
     def error(self, message: str) -> None:
         """Log an error message.
 
@@ -95,3 +156,12 @@ class DevBoxLogImpl(DevBoxLog):
             message: The message to log.
         """
         self._log("ERROR", message, self.ERROR_COLOR)
+
+    def error_from(self, source: Any, message: str) -> None:
+        """Log an error message with source.
+
+        Args:
+            source: The source object where the log originates.
+            message: The message to log.
+        """
+        self.error(self._format_with_source(source, message))

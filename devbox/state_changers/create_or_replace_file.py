@@ -1,6 +1,8 @@
 import hashlib
 from pathlib import Path
 
+from devbox.change_result import ChangeResult
+from devbox.change_status import ChangeStatus
 from devbox.state_changer import StateChanger
 from devbox.target import Target
 from devbox.target_lock import TargetLock
@@ -21,6 +23,10 @@ class CreateOrReplaceFile(StateChanger):
         self.path = path
         self.contents = contents
         self.log = log
+
+    def __repr__(self) -> str:
+        """Return a string representation of this state changer."""
+        return f"CreateOrReplaceFile({self.path})"
 
     def get_name(self) -> str:
         """Return the name of this state changer.
@@ -53,15 +59,56 @@ class CreateOrReplaceFile(StateChanger):
 
         return [target_lock]
 
-    def change(self) -> None:
-        """Apply the state change by creating or replacing the file."""
-        self.log.info(f"Creating/replacing file: {self.path}")
-        self.path.write_text(self.contents)
+    def change(self) -> ChangeResult:
+        """Apply the state change by creating or replacing the file.
 
-    def undo(self) -> None:
-        """Undo the state change."""
-        self.log.info(f"Undo not implemented for: {self.path}")
-        pass
+        Returns:
+            ChangeResult: The result of the change operation.
+        """
+        self.log.info_from(self, f"Starting file operation for: {self.path}")
+        self.log.info_from(self, f"Target path: {self.path.resolve()}")
+        self.log.info_from(self, f"Content length: {len(self.contents)} characters")
+
+        try:
+            file_exists = self.path.exists()
+            if file_exists:
+                self.log.info_from(self, f"File exists, will be replaced")
+            else:
+                self.log.info_from(self, f"File does not exist, will be created")
+
+            self.log.info_from(self, f"Writing content to file...")
+            self.path.write_text(self.contents)
+            self.log.info_from(self, f"File write completed successfully")
+
+            return ChangeResult(
+                ChangeStatus.SUCCESS,
+                f"Created/replaced file: {self.path}",
+            )
+        except PermissionError as e:
+            self.log.error_from(self, f"Permission denied writing to: {self.path}")
+            return ChangeResult(
+                ChangeStatus.FAILED,
+                f"Permission denied: {self.path}: {e}",
+            )
+        except Exception as e:
+            self.log.error_from(self, f"Unexpected error: {e}")
+            return ChangeResult(
+                ChangeStatus.FAILED,
+                f"Failed to create/replace file {self.path}: {e}",
+            )
+
+    def undo(self) -> ChangeResult:
+        """Undo the state change.
+
+        Returns:
+            ChangeResult: The result of the undo operation.
+        """
+        self.log.warn_from(self, f"Undo requested for: {self.path}")
+        self.log.warn_from(self, f"Undo operation is not implemented")
+        return ChangeResult(
+            ChangeStatus.WARN,
+            f"Undo not implemented for: {self.path}",
+        )
 
     def is_changed(self) -> bool:
         """Check if the file exists and contains the expected contents.
@@ -70,5 +117,11 @@ class CreateOrReplaceFile(StateChanger):
             bool: True if the file exists and contains the expected contents, False otherwise.
         """
         if not self.path.exists():
+            self.log.info_from(self, f"File does not exist: {self.path}")
             return False
-        return self.path.read_text() == self.contents
+        matches = self.path.read_text() == self.contents
+        if matches:
+            self.log.info_from(self, f"File already has expected content: {self.path}")
+        else:
+            self.log.info_from(self, f"File exists but content differs: {self.path}")
+        return matches

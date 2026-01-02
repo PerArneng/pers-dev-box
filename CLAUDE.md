@@ -11,7 +11,9 @@ DevBox is a Python framework for managing and orchestrating file system state ch
 The project uses `dependency-injector` for DI. All dependencies are wired through `devbox/container.py`:
 
 - **Singleton providers**: `DevBoxLogImpl`, `ChangeEngine`
-- **Factory providers**: `CreateOrReplaceFile` (accepts runtime params `path`, `contents`)
+- **Factory providers**:
+  - `create_or_replace_file_factory` (accepts `path`, `contents`)
+  - `homebrew_factory` (accepts `package_name`)
 
 Classes depend on ABC interfaces, not implementations:
 - `DevBoxLog` ABC for logging
@@ -24,9 +26,12 @@ Classes depend on ABC interfaces, not implementations:
 | `Container` | DI Container | `devbox/container.py` |
 | `StateChanger` | ABC | `devbox/state_changer.py` |
 | `ChangeEngine` | Orchestrator | `devbox/change_engine.py` |
+| `ChangeStatus` | Enum | `devbox/change_status.py` |
+| `ChangeResult` | Dataclass | `devbox/change_result.py` |
 | `DevBoxLog` | ABC | `devbox/utils/devbox_log.py` |
 | `DevBoxLogImpl` | Implementation | `devbox/utils/devbox_log.py` |
 | `CreateOrReplaceFile` | StateChanger impl | `devbox/state_changers/create_or_replace_file.py` |
+| `HomeBrew` | StateChanger impl | `devbox/state_changers/home_brew.py` |
 
 ### Module Structure
 
@@ -35,11 +40,14 @@ devbox/
 ├── __init__.py          # Exports: ChangeEngine, Container, StateChanger
 ├── container.py         # Central DI container
 ├── change_engine.py     # Orchestrates state changers
+├── change_result.py     # ChangeResult dataclass
+├── change_status.py     # ChangeStatus enum (SUCCESS, FAILED, WARN)
 ├── state_changer.py     # StateChanger ABC
 ├── target.py            # Target dataclass
 ├── target_lock.py       # TargetLock dataclass
 ├── state_changers/      # StateChanger implementations
-│   └── create_or_replace_file.py
+│   ├── create_or_replace_file.py
+│   └── home_brew.py
 └── utils/
     └── devbox_log.py    # DevBoxLog ABC + DevBoxLogImpl
 ```
@@ -49,25 +57,73 @@ devbox/
 ### Adding New State Changers
 
 1. Create a new file in `devbox/state_changers/`
-2. Implement the `StateChanger` ABC (methods: `get_name`, `get_locks`, `change`, `undo`, `is_changed`)
-3. Accept `log: DevBoxLog` as a constructor parameter
-4. Add a factory provider in `devbox/container.py`
-5. Export from `devbox/state_changers/__init__.py`
+2. Implement the `StateChanger` ABC:
+   - `get_name()` - Return name of state changer
+   - `get_locks()` - Return list of TargetLock
+   - `change()` - Apply change, return `ChangeResult`
+   - `undo()` - Revert change, return `ChangeResult`
+   - `is_changed()` - Check if already applied
+3. Implement `__repr__()` for traceable logging
+4. Accept `log: DevBoxLog` as a constructor parameter
+5. Add a factory provider in `devbox/container.py`
+6. Export from `devbox/state_changers/__init__.py`
+
+### `__repr__` Convention
+
+All StateChanger implementations MUST implement `__repr__` for traceable source-based logging:
+
+```python
+def __repr__(self) -> str:
+    return f"ClassName({self.key_param})"
+```
+
+### ChangeResult
+
+The `change()` and `undo()` methods return a `ChangeResult`:
+
+```python
+from devbox.change_result import ChangeResult
+from devbox.change_status import ChangeStatus
+
+# Success
+return ChangeResult(ChangeStatus.SUCCESS, "Operation completed")
+
+# Failure
+return ChangeResult(ChangeStatus.FAILED, "Error message")
+
+# Warning
+return ChangeResult(ChangeStatus.WARN, "Warning message")
+```
 
 ### Logging
 
-Use the injected `DevBoxLog` instance for logging:
-- `self.log.info("message")` - Green INFO
-- `self.log.warn("message")` - Yellow WARN
-- `self.log.error("message")` - Red ERROR
+Use the injected `DevBoxLog` instance for logging. Always use source-based logging with `self`:
 
-Format: `YYYY-MM-DD HH:MM LEVEL message`
+```python
+# Source-based logging (preferred) - includes class name in output
+self.log.info_from(self, "message")   # [ClassName(param)]: message
+self.log.warn_from(self, "message")   # [ClassName(param)]: message
+self.log.error_from(self, "message")  # [ClassName(param)]: message
+
+# Simple logging (for general messages)
+self.log.info("message")
+self.log.warn("message")
+self.log.error("message")
+```
+
+Format: `YYYY-MM-DD HH:MM LEVEL [Source]: message`
+
+Colors:
+- **INFO**: Green
+- **WARN**: Yellow
+- **ERROR**: Red
 
 ### Testing
 
 Override providers for testing:
 ```python
 from unittest.mock import Mock
+from dependency_injector import providers
 from devbox import Container
 
 container = Container()
@@ -90,5 +146,5 @@ uv add <package>
 `main.py` bootstraps the application:
 1. Creates `Container` instance
 2. Gets logger and engine from container
-3. Creates state changers via factory
+3. Creates state changers via factory (log auto-injected)
 4. Calls `engine.apply_changes()`

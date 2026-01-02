@@ -1,0 +1,66 @@
+from devbox.change_result import ChangeResult
+from devbox.state_changer import StateChanger
+from devbox.state_changers.home_brew import HomeBrew
+from devbox.target_lock import TargetLock
+from devbox.utils.devbox_log import DevBoxLog
+
+
+class ClaudeCode(StateChanger):
+    """State changer that installs Claude Code via Homebrew."""
+
+    PACKAGE_NAME = "claude-code"
+
+    def __init__(self, log: DevBoxLog) -> None:
+        """Initialize the ClaudeCode state changer.
+
+        Args:
+            log: The logger instance for logging operations.
+        """
+        self.log = log
+        self._homebrew = HomeBrew(self.PACKAGE_NAME, log)
+
+    def __repr__(self) -> str:
+        """Return a string representation of this state changer."""
+        return "ClaudeCode()"
+
+    def get_name(self) -> str:
+        """Return the name of this state changer.
+
+        Returns:
+            str: The name of the state changer.
+        """
+        return "ClaudeCode"
+
+    def get_locks(self) -> list[TargetLock]:
+        """Return the target locks for this state changer.
+
+        Returns:
+            list[TargetLock]: The list of target locks.
+        """
+        return self._homebrew.get_locks()
+
+    def change(self) -> ChangeResult:
+        """Apply the state change by installing Claude Code via Homebrew.
+
+        Returns:
+            ChangeResult: The result of the change operation.
+        """
+        self.log.info_from(self, "Installing Claude Code")
+        return self._homebrew.change()
+
+    def undo(self) -> ChangeResult:
+        """Undo the state change by uninstalling Claude Code.
+
+        Returns:
+            ChangeResult: The result of the undo operation.
+        """
+        self.log.info_from(self, "Uninstalling Claude Code")
+        return self._homebrew.undo()
+
+    def is_changed(self) -> bool:
+        """Check if Claude Code is already installed.
+
+        Returns:
+            bool: True if Claude Code is installed, False otherwise.
+        """
+        return self._homebrew.is_changed()

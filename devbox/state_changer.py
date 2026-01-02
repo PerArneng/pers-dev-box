@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from devbox.change_result import ChangeResult
 from devbox.target_lock import TargetLock
 
 
@@ -25,13 +26,21 @@ class StateChanger(ABC):
         pass
 
     @abstractmethod
-    def change(self) -> None:
-        """Apply the state change."""
+    def change(self) -> ChangeResult:
+        """Apply the state change.
+
+        Returns:
+            ChangeResult: The result of the change operation.
+        """
         pass
 
     @abstractmethod
-    def undo(self) -> None:
-        """Undo the state change."""
+    def undo(self) -> ChangeResult:
+        """Undo the state change.
+
+        Returns:
+            ChangeResult: The result of the undo operation.
+        """
         pass
 
     @abstractmethod
