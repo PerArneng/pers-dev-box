@@ -10,26 +10,20 @@ class ClaudeCode(StateChanger):
 
     PACKAGE_NAME = "claude-code"
 
-    def __init__(self, log: DevBoxLog) -> None:
+    def __init__(
+        self,
+        log: DevBoxLog,
+        parent: StateChanger | None = None,
+    ) -> None:
         """Initialize the ClaudeCode state changer.
 
         Args:
             log: The logger instance for logging operations.
+            parent: Optional parent StateChanger for hierarchy.
         """
         self.log = log
-        self._homebrew = HomeBrew(self.PACKAGE_NAME, log)
-
-    def __repr__(self) -> str:
-        """Return a string representation of this state changer."""
-        return "ClaudeCode()"
-
-    def get_name(self) -> str:
-        """Return the name of this state changer.
-
-        Returns:
-            str: The name of the state changer.
-        """
-        return "ClaudeCode"
+        self.parent = parent
+        self._homebrew = HomeBrew(self.PACKAGE_NAME, log, parent=self)
 
     def get_locks(self) -> list[TargetLock]:
         """Return the target locks for this state changer.

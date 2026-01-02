@@ -12,29 +12,25 @@ from devbox.utils.devbox_log import DevBoxLog
 class CreateOrReplaceFile(StateChanger):
     """State changer that creates or replaces a file with placeholder content."""
 
-    def __init__(self, path: Path, contents: str, log: DevBoxLog) -> None:
+    def __init__(
+        self,
+        path: Path,
+        contents: str,
+        log: DevBoxLog,
+        parent: StateChanger | None = None,
+    ) -> None:
         """Initialize the CreateOrReplaceFile state changer.
 
         Args:
             path: The path to the file to create or replace.
             contents: The contents to write to the file.
             log: The logger instance for logging operations.
+            parent: Optional parent StateChanger for hierarchy.
         """
         self.path = path
         self.contents = contents
         self.log = log
-
-    def __repr__(self) -> str:
-        """Return a string representation of this state changer."""
-        return f"CreateOrReplaceFile({self.path})"
-
-    def get_name(self) -> str:
-        """Return the name of this state changer.
-
-        Returns:
-            str: The name of the state changer.
-        """
-        return f"CreateOrReplaceFile({self.path})"
+        self.parent = parent
 
     def get_locks(self) -> list[TargetLock]:
         """Return the target locks for this state changer.

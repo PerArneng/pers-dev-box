@@ -12,27 +12,22 @@ from devbox.utils.devbox_log import DevBoxLog
 class HomeBrew(StateChanger):
     """State changer that installs a Homebrew package."""
 
-    def __init__(self, package_name: str, log: DevBoxLog) -> None:
+    def __init__(
+        self,
+        package_name: str,
+        log: DevBoxLog,
+        parent: StateChanger | None = None,
+    ) -> None:
         """Initialize the HomeBrew state changer.
 
         Args:
             package_name: The name of the Homebrew package to install.
             log: The logger instance for logging operations.
+            parent: Optional parent StateChanger for hierarchy.
         """
         self.package_name = package_name
         self.log = log
-
-    def __repr__(self) -> str:
-        """Return a string representation of this state changer."""
-        return f"HomeBrew({self.package_name})"
-
-    def get_name(self) -> str:
-        """Return the name of this state changer.
-
-        Returns:
-            str: The name of the state changer.
-        """
-        return f"HomeBrew({self.package_name})"
+        self.parent = parent
 
     def get_locks(self) -> list[TargetLock]:
         """Return the target locks for this state changer.
